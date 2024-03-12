@@ -1,0 +1,107 @@
+Chapter 5
+3.
+a). There is no jump call required for initializing variables of different types. Arithmetic functions, such as division for long long integers, all arithmetic functions for floats, and all arithmetic functions for long doubles, involve jump calls. One example could be: 
+    f3 = f1+f2;
+9d0086dc:	8fc50034 	lw	a1,52(s8)
+9d0086e0:	8fc40030 	lw	a0,48(s8)
+9d0086e4:	0f4022a7 	jal	9d008a9c <__addsf3>
+9d0086e8:	00000000 	nop
+9d0086ec:	afc20058 	sw	v0,88(s8)
+b). Arithmetic functions such as integer addition, subtraction, and multiplication result in the fewest assembly commands. One example could be: 
+    i3 = i1+i2;
+9d0085d0:	8fc30014 	lw	v1,20(s8)
+9d0085d4:	8fc20018 	lw	v0,24(s8)
+9d0085d8:	00621021 	addu	v0,v1,v0
+9d0085dc:	afc2004c 	sw	v0,76(s8)
+The type char is not involved because it only requires 1 byte to store information, whereas our PIC32 is a 32-bit based chip. To ensure that the result of char addition remains within 8 bits, we need to use andi to retain the 1-byte result and remove the remaining 24 bits.
+c). 
+  | char    | int     | long long | float | long double
++ | 1.25(5) | 1.0(4)  | 2.75(11)  | J     | J
+- | 1.25(5) | 1.0(4)  | 2.75(11)  | J     | J
+* | 1.25(5) | 1.0(4)  | 4.5(18)   | J     | J
+/ | 1.75(7) | 1.75(7) | J         | J     | J
+d).
+Here is the information where some of the math subroutines installed in virtual memory:
+kseg0 Program-Memory Usage
+section                    address  length [bytes]      (dec)  Description
+-------                 ----------  -------------------------  -----------
+.text.dp32mul           0x9d007490          0x4b8        1208   
+.text                   0x9d007948          0x444        1092  App's exec code 
+.text.dp32subadd        0x9d007d8c          0x430        1072   
+.text.dp32mul           0x9d0081bc          0x32c         812   
+.text                   0x9d0084e8          0x5ac        1452  App's exec code 
+.text.fpsubadd          0x9d008a94          0x278         632   
+.text.fp32div           0x9d008d0c          0x230         560   
+.text.fp32mul           0x9d008f3c          0x1bc         444   
+The term "address" refers to the location where the subroutine is installed in virtual memory, and "length" indicates the amount of program memory used by each subroutine. Zooming in a bit, for example, on the FP32 division subroutine, we can identify where the function has been referenced:
+.text.fp32div   0x000000009d008d0c      0x230
+ .text.fp32div  0x000000009d008d0c      0x230 /Applications/microchip/xc32/v4.35/bin/bin/../../lib/gcc/pic32mx/8.3.1/../../../../pic32mx/lib/libm.a(fp32div.o)
+                0x000000009d008d0c                __divsf3
+                0x000000009d008d0c                fpdiv
+
+4. For bitwise AND, there are 4 commands; for bitwise OR, there are 4 commands; for shifting left by 4 spaces, there are 3 commands; for shifting right by 3 spaces, there are 3 commands.
+
+
+Chapter 6
+1. 
+Pros for polling:
+Polling does not interrupt the main operation, which means it does not require additional RAM or cache to store variable data.
+
+Cons for polling:
+Polling requires checking each device or pin to determine if there is a process that needs handling, which can slow down the main process. Additionally, if an event is raised after the pin has already been checked by polling, the newly raised event could be missed.
+
+Pros for interrupts:
+Interrupts are executed immediately upon the main process when the interrupt flag is raised, ensuring timely execution. Moreover, an interrupt is only executed if an interrupt flag is raised, making the check for interrupts faster than polling.
+
+Cons for interrupts:
+Interrupts require additional memory to save the main process's data, and once the interrupt has finished running, the data from the main process needs to be restored.
+
+4. 
+a). The main process will be interrupted, and the newly enabled ISR will be executed.
+b). In this case, the newly raised IRQ will interrupt the current ISR, and then the ISR with priority level 4 will be executed. After its execution, it will jump back to the ISR with priority level 2.
+c). In this case, the newly raised IRQ won't stop the current ISR, and the current ISR with subpriority level 0 will keep running. After the current execution finishes, the newly raised interrupt with subpriority level 2 will be executed.
+d). In this case, the newly raised IRQ will wait in a queue until the ISR with priority level 6 finishes first, and then it will start to operate.
+
+5. 
+a). The first thing the CPU must do before executing the ISR is to save the context from the CPU registers to RAM and clear the cache so the interrupt call can run. The last thing the CPU must do upon completing the ISR is to restore the context from RAM into registers and restore the CPU states before interrupts.
+b). Using the shadow register set can eliminate the time needed for context save and restore, as the CPU can switch to this extra set of internal registers when an ISR occurs.
+
+8. 
+a). 
+// Enable the Timer2 interrupt
+IEC0SET = 0b100,000,000;
+// Set the flag status to 0
+IFS0CLR = 0b100,000,000;
+// Before we set the priority level, we need to clear the bits in case there are raised bits from other interrupts
+IPC2CLR = 0b11,111;
+// Set the priority to 5 and subpriority to 2
+IPC2SET = 0b10,110;
+b). 
+// Enable the Real-Time Clock and Calendar interrupt
+IEC1SET = 0b1,000,000,000,000,000;
+// Set the flag status to 0
+IFS1CLR = 0b1,000,000,000,000,000;
+// Clear bits before set the priority level
+IPC8CLR = 0b11,111,000,000,000,000,000,000,000,000;
+// Set the priority to 6 and subpriority to 1
+IPC8SET = 0b11,001,000,000,000,000,000,000,000,000;
+c).
+// Enable the UART1 receiver interrupt
+IEC1SET = 0b100,000,000;
+// Set the flag status to 0
+IFS1CLR = 0b100,000,000;
+// Clear bits before set the priority level
+IPC8CLR = 0b11,111;
+// Set the priority to 7 and subpriority to 3
+IPC8SET = 0b11,111;
+d). 
+// Enable the INT2 external input interrupt
+IEC0SET = 0b100,000,000,000;
+// Set the flag status to 0
+IFS0CLR = 0b100,000,000,000;
+// Clear bits before set the priority level
+IPC2CLR = 0b1,111,100,000,000,000,000,000,000,000;
+// Set the priority to 3 and subpriority to 2
+IPC2SET = 0b0,111,000,000,000,000,000,000,000,000;
+// Configure to trigger on a rising edge.
+INTCON = 0b100;

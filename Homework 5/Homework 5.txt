@@ -1,0 +1,24 @@
+Chapter 3
+
+3. 
+a). For port A, bits 0 to 4 are for I/O, and for port B, bits 0 to 15 are for I/O. Pin 0 corresponds to bit 0 of port B.
+b). For SFR INTCON, bits 5 to 7, bit 11, and bits 13 to 31 are not implemented. For the implemented bits, we have INT0EP for bit 0, INT1EP for bit 1, INT2EP for bit 2, INT3EP for bit 3, INT4EP for bit 4, TPC<2:0> for bits 8 to 10, and MVEC for bit 12.
+
+7. The linker file is much larger than the resulting .hex file because it contains information about RAM, flash, and virtual memories. On the other hand, the final .hex file most likely won't make use of all the memory addresses defined in the linker file. Therefore, it is smaller in size than the linker file. 
+
+9. 
+// Set bits 2 and 3 of TRISB to 1
+TRISBSET = 0b1100;
+// Clear bits 1 and 5
+TRISBCLR = 0b100010;
+// Flip bits 0 and 4
+TRISBINV = 0b10001;
+
+
+Chapter 4
+
+1. In NU32.c, there is no private components, and functions NU32DIP_Startup, NU32DIP_ReadUART1, and NU32DIP_WriteUART1 are meant to be used in other C files.
+
+2. 
+b). For main.c, I only included helper.h (because I need to call functions from this file) and the main function itself. Since the main file is responsible for the main function, I put all the other helper functions into the helper file. In helper.h, I included the nu32dip.h and stdio libraries because helper functions need to use board read and write from the nu32 library, and to print to the screen, it needs to call the stdio library. Constants like MAX_YEARS and BUFFER_SIZE are also included in the helper header file because these variables only need to exist under the scope of helper functions. Similarly, I defined the Investment struct in the header file so the source file can just call and use it. The last thing I had for the header file is the function prototypes, which is necessary before I implement them in the source file. The helper.c file includes the helper.h file and all the detailed implementations of the functions, which is basically what a source file should have.
+c). For the header files, I included io.h and calculate.h files for this part. The io.h file, similar to what I had in part b, contains information about two libraries, two constants, and the Investment type. The only difference is that I didn't include the calculation function, but only the input and output functions. Since we named the file io, functions related to input and output should be the only members in the file. The calculate.h file, on the other hand, includes the io.h file so it can read the Investment type and a function prototype for the calculation function from io.h. In main.c file where all the functions are called, I only included the calculate.h file. Even though the main function needs access to the nu32 library, it can obtain the information from calculate.h, which will search from the io.h file it included, and eventually get it from the nu32 library included in io.h. The whole point of separating header files is to ensure that within each of them, they are doing the things as their name indicates.

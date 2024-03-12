@@ -1,0 +1,6 @@
+Chapter 24
+1.2. The resistor value I chose for R is 10kΩ.
+2.1. Given that we are using Timer3 as the base for OC1, and employing a prescaler of 1 for PBCLK, achieving a 20 kHz PWM on OC1 requires setting PR3 to 2400.
+2.2. c) After removing the capacitor, Vout began oscillating between high and low. However, with the capacitor installed, the waveform stayed consistent. This stability is attributed to the capacitor's ability to maintain voltage levels, even during drops.
+Note: Please refer to the image in the folder for parts a, b, and c.
+3.1. Note: Please refer to the image in the folder for this question.
