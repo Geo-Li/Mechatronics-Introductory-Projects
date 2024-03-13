@@ -54,6 +54,14 @@ def main():
     single_output = ['b', 'c', 'd', 'e']
     plotting = ['k', 'o']
 
+    modes_dict = {
+        0: "IDLE",
+        1: "PWM",
+        2: "ITEST",
+        3: "HOLD",
+        4: "TRACK"
+    }
+
     has_quit = False
     # menu loop
     while not has_quit:
@@ -114,7 +122,10 @@ def main():
         elif selection in plotting:
             read_plot_matrix(ser)
         elif selection == 'r':
-            pass
+            # get the mode
+            mode = ser.read_until(b'\n')
+            # print it to the screen
+            print('Now is in mode: ' + modes_dict[int(mode.decode('utf-8'))] + '\n')
         elif (selection == 'x'):
             write_input(ser, "Enter two numbers for addition:")
             get_line(ser)

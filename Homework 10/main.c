@@ -55,9 +55,11 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CURRENT_Controller(void) {
         }
         case ITEST:
         {
+            // get the reference and actual current
             float REFcurrent = current_sign * REFERENCE_CURRENT;
             float ACTcurrent = INA219_read_current();
 
+            // store the reference current and actual current in their arrays
             current_REF_array[count] = REFcurrent;
             current_ACT_array[count] = ACTcurrent;
 
@@ -71,6 +73,7 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CURRENT_Controller(void) {
 
             float u = current_adjustment(0, error, curr_kp, curr_ki, 0);
             
+            // set the PWM based on the adjusted current
             OC1RS = (unsigned int) (u * PR3 / 100.0);
             count++;
             if (count == 25 || count == 50 || count == 75) {
@@ -91,10 +94,12 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CURRENT_Controller(void) {
             } else if (posREFcurrent < 0) {
                 LATBbits.LATB14 = 0;
             }
+            // get the actual current
             float ACTcurrent = INA219_read_current();
             float error = posREFcurrent - ACTcurrent;
 
             float u = current_adjustment(0, error, curr_kp, curr_ki, 0);
+            // set the PWM based on the adjusted current
             OC1RS = (unsigned int) (u * PR3 / 100.0);
             break;
         }
@@ -107,10 +112,12 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CURRENT_Controller(void) {
             } else if (posREFcurrent < 0) {
                 LATBbits.LATB14 = 0;
             }
+            // get the actual current
             float ACTcurrent = INA219_read_current();
             float error = posREFcurrent - ACTcurrent;
 
             float u = current_adjustment(0, error, curr_kp, curr_ki, 0);
+            // set the PWM based on the adjusted current
             OC1RS = (unsigned int) (u * PR3 / 100.0);
             break;
         }
@@ -130,23 +137,30 @@ void __ISR(_TIMER_4_VECTOR, IPL6SOFT) POSITION_Controller(void) {
     switch (get_mode()) {
         case HOLD:
         {
+            // get the actual position in degree
             float ACTposition = get_motor_count() / 384.0 * 360.0;
 
             float error = REFposition - ACTposition;
 
+            // set the reference position current to the adjusted current
             float u = current_adjustment(1, error, pos_kp, pos_ki, pos_kd);
+            
             posREFcurrent = u;
             break;
         }
         case TRACK:
         {
+            // get the reference position
             REFposition = trajectory_REF_array[count];
+            // get the actual position in degree
             float ACTposition = get_motor_count() / 384.0 * 360.0;
 
+            // put the actual position into the array
             trajectory_ACT_array[count] = ACTposition;
             float error = REFposition - ACTposition;
 
             float u = current_adjustment(1, error, pos_kp, pos_ki, pos_kd);
+            // set the reference position current to the adjusted current
             posREFcurrent = u;
 
             count++;

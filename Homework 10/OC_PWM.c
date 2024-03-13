@@ -23,7 +23,7 @@ void PWM_Startup() {
 
     // Set up timer4 for ISR - 200Hz
     T4CONbits.TCKPS = 0b110; // Set the prescaler N=64
-    PR4 = 3750;             // rollover at 15000; 48MHz/64/3750 = 200 Hz
+    PR4 = 3750;              // rollover at 3750; 48MHz/64/3750 = 200 Hz
     TMR4 = 0;                // set the timer count to zero
     T4CONbits.ON = 1;        // turn the timer on
     IPC4bits.T4IP = 6;       // INT step 4: priority for Timer4 to be 6
